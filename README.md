@@ -37,7 +37,7 @@ Automatically Download/Precaches Addons Depend Map Config + Update Manually For 
 
 | Command | Description | Usage |
 |---------|-------------|-------|
-| `gkz_update <workshopid>` | Force Update/Download A Specific Workshop To The Server | `gkz_download 12345678` |
+| `gkz_update <workshopid>` | Force Update/Download A Specific Workshop To The Server | `gkz_update 12345678` |
 | `gkz_download <workshopid>` | Force Update/Download A Specific Workshop To The Server | `gkz_download 12345678` |
 
 ---
