@@ -2,7 +2,7 @@
 
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
-# [CS2] Auto-Downloader-GoldKingZ (1.0.0)
+# [CS2] Auto-Downloader-GoldKingZ (1.0.1)
 
 Automatically Download/Precaches Addons Depend Map Config + Update Manually For MultiAddonManager
 
@@ -71,21 +71,24 @@ Automatically Download/Precaches Addons Depend Map Config + Update Manually For 
 ## Precache Logic
 | Strategy | Description |
 |-------------|-------------|
-| `Include_These_Only` | Precache **ONLY** the specific files/folders listed |
-| `Include_All_Exclude_These` | Precache **ALL** resources except for the ones listed |
-| *Empty / Missing* | If no rules are set, the system will precache Everything |
+| `Workshop_These_Only` | Precache **ONLY** listed folders/files found within Workshop VPKs. |
+| `Workshop_All_Exclude_These` | Precache **ALL** from Workshop VPKs **EXCEPT** the listed items. |
+| `Custom_Include` | **Direct Precache**: Use this for CS2 / Workshop / Any |
+| *Empty / Missing* | If no Workshop rules are set, the system will precache **Everything** in Workshop VPKs. |
+
+## Map Matching & Priority
+The system searches for a configuration match in this order:
+1. **Exact Match**: Full name (e.g., `de_dust2`).
+2. **Prefix Match**: Matches maps starting with the key (e.g., `de_`). **MUST end with `_`**.
+3. **Global Match**: Uses `*` if no specific or prefix match is found.
 
 ## Map Configurations
 | Map Name | Strategy Used | Paths / Files |
 |-------------|-------------|-------------|
-| `*` | Global | *Default settings for all maps* |
-| `de_dust2` | `Include_These_Only` | `models/dev/`, `materials/dev/` |
-| `de_mirage` | `Include_All_Exclude_These` | `scripts/weapons.vdata`, `models/goldkingz/...`, `panorama/images/...` |
-| `cs_office` | `Include_All_Exclude_These` | `scripts/weapons.vdata` |
-
-**Configuration Notes:**
-- The `*` entry acts as the global fallback for any map not explicitly named.
-- Folder paths (ending in `/`) will include all assets within that directory.
+| `*` | `Custom_Include` | `sounds/player/taunt_clap_01.vsnd` |
+| `de_` | `Custom_Include` | `soundevents2/game_sounds_ui.vsndevts` |
+| `de_dust2` | `Workshop_These_Only` | `models/dev/`, `materials/dev/` |
+| `cs_office` | `Workshop_All_Exclude_These` | `scripts/weapons.vdata` |
 
 </details>
 
@@ -94,6 +97,12 @@ Automatically Download/Precaches Addons Depend Map Config + Update Manually For 
 
 <details>
 <summary><b>📋 View Version History</b> (Click to expand 🔽)</summary>
+
+### [1.0.1]
+- Added Prefix `de_` `cs_`  
+- Added Custom_Include 
+- Rename These_Only To Workshop_All_Exclude_These
+- Rename All_Exclude_These To Workshop_All_Exclude_These
 
 ### [1.0.0]
 - Initial plugin release
