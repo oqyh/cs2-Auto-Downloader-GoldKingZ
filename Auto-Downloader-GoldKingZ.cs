@@ -14,7 +14,7 @@ namespace Auto_Downloader_GoldKingZ;
 public class MainPlugin : BasePlugin
 {
     public override string ModuleName => "Automatically Download/Precaches Addons Depend Map Config + Update Manually";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static MainPlugin Instance { get; set; } = new();
@@ -169,16 +169,16 @@ public class MainPlugin : BasePlugin
             var serverWorkshopIds = AddonManagerConfig.Get_mm_extra_addons();
             var clientWorkshopIds = AddonManagerConfig.Get_mm_client_extra_addons();
             var combinedWorkshopIds = serverWorkshopIds.Concat(clientWorkshopIds).Distinct().ToList();
+
             var settings = Helper.GetSettings(Server.MapName);
             if (settings == null) return;
             
             var getmapname = settings.MapName?.Trim();
-            if (string.IsNullOrEmpty(getmapname)) return;
-
-            if (getmapname == Server.MapName || getmapname == "*")
+            if (!string.IsNullOrEmpty(getmapname))
             {
-                var Include_These_Only = settings.Include_These_Only;
-                var Include_All_Exclude_These = settings.Include_All_Exclude_These;
+                var Workshop_These_Only = settings.Workshop_These_Only;
+                var Workshop_All_Exclude_These = settings.Workshop_All_Exclude_These;
+                var Custom_Include = settings.Custom_Include;
                 
                 bool message_onetime = false;
                 foreach (var getworkshopIds in combinedWorkshopIds)
@@ -192,11 +192,11 @@ public class MainPlugin : BasePlugin
                     .Where(evt => !string.IsNullOrEmpty(evt))
                     .OrderBy(evt => 
                     {
-                        if (Include_These_Only != null)
-                            return Include_These_Only.Any(f => evt.StartsWith(f));
+                        if (Workshop_These_Only != null)
+                            return Workshop_These_Only.Any(f => evt.StartsWith(f));
                         
-                        if (Include_All_Exclude_These != null)
-                            return !Include_All_Exclude_These.Any(f => evt.StartsWith(f));
+                        if (Workshop_All_Exclude_These != null)
+                            return !Workshop_All_Exclude_These.Any(f => evt.StartsWith(f));
                         
                         return true;
                     })
@@ -208,6 +208,7 @@ public class MainPlugin : BasePlugin
                         if (!message_onetime)
                         {
                             Helper.DebugMessage($"===== Starting Precache [Map {Server.MapName}] =====");
+                            Helper.DebugMessage($"[Config Match]: {getmapname}");
                             message_onetime = true;
                         }
 
@@ -217,9 +218,9 @@ public class MainPlugin : BasePlugin
                             message_onetime_2 = true;
                         }
                         
-                        if (Include_These_Only != null)
+                        if (Workshop_These_Only != null)
                         {
-                            if (Include_These_Only.Any(f => evt.StartsWith(f)))
+                            if (Workshop_These_Only.Any(f => evt.StartsWith(f)))
                             {
                                 manifest.AddResource(evt);
                                 Helper.DebugMessage($"[✓] {evt}");
@@ -229,9 +230,9 @@ public class MainPlugin : BasePlugin
                                 Helper.DebugMessage($"[X] {evt}");
                             }
                         }
-                        else if (Include_All_Exclude_These != null)
+                        else if (Workshop_All_Exclude_These != null)
                         {
-                            if (!Include_All_Exclude_These.Any(f => evt.StartsWith(f)))
+                            if (!Workshop_All_Exclude_These.Any(f => evt.StartsWith(f)))
                             {
                                 manifest.AddResource(evt);
                                 Helper.DebugMessage($"[✓] {evt}");
@@ -245,6 +246,19 @@ public class MainPlugin : BasePlugin
                         {
                             manifest.AddResource(evt);
                             Helper.DebugMessage($"[✓] {evt}");
+                        }
+                    }
+                }
+
+                if (Custom_Include != null && Custom_Include.Count > 0)
+                {
+                    Helper.DebugMessage($"--- [Custom Includes] ---");
+                    foreach (var directEntry in Custom_Include)
+                    {
+                        if (!string.IsNullOrWhiteSpace(directEntry))
+                        {
+                            manifest.AddResource(directEntry);
+                            Helper.DebugMessage($"[✓] {directEntry}");
                         }
                     }
                 }

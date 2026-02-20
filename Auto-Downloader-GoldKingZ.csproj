@@ -21,6 +21,5 @@
   <ItemGroup>
     <None Update="Newtonsoft.Json.dll"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
     <None Update="ValvePak.dll"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
-    <None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

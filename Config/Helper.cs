@@ -21,41 +21,45 @@ public class Helper
   //==========================================================
   //                    RESOURCE SETTINGS
   //==========================================================
-  // ""*"" = Global config for maps not listed.
+  // Priority: 1. Full Name (de_dust2) | 2. Prefix_ (de_) | 3. Global (*)
+  // Note: If You Want To Use Prefixes, MUST End With ""_""
   //
-  // Include_These_Only           -> Precache ONLY listed files.
-  // Include_All_Exclude_These    -> Precache ALL except listed.
-  //
-  // If both are missing or empty -> Precache EVERYTHING.
-  //===================================================
+  // - Workshop_These_Only         -> Precache ONLY listed files from Workshop VPKs.
+  // - Workshop_All_Exclude_These  -> Precache ALL from Workshop EXCEPT listed.
+  // - Custom_Include              -> Custom Precache From CS2 / Workshop / Any
+  //==========================================================
 
-  ""*"":
+  ""*"": 
   {
-    // Default settings for all maps
+    // Default Settings For All Maps
   },
-  ""de_dust22"": // Map Name
+  ""de_"": // Prefix Of The Map Shortcut
   {
-    ""Include_These_Only"":
-    [
+	""Custom_Include"":
+	[
+      ""soundevents/game_sounds_ui.vsndevts"",
+      ""models/vehicles/airplane_medium_01/airplane_medium_01_landed.vmdl"",
+    ]
+  },
+  ""de_dust22"": //Overide Prefix de_ On Map de_dust22 Only
+  {
+    ""Workshop_These_Only"":
+	[
       ""models/dev/"",
       ""materials/dev/""
     ]
   },
-  ""de_miragee"": // Map Name
+  ""cs_office"": // Full Map Name
   {
-    ""Include_All_Exclude_These"":
-    [
+    ""Workshop_All_Exclude_These"":
+	[
       ""scripts/weapons.vdata"",
-	  ""models/goldkingz/snowball/snowball.vmdl"",
-	  ""models/goldkingz/snowball/ag2/snowball_ag2.vmdl"",
-	  ""panorama/images/icons/equipment/decoy.vsvg""
-    ]
-  },
-  ""cs_officee"": // Map Name
-  {
-    ""Include_All_Exclude_These"":
-    [
-      ""scripts/weapons.vdata""
+      ""models/goldkingz/snowball/snowball.vmdl"",
+      ""panorama/images/icons/equipment/decoy.vsvg""
+    ],
+    ""Custom_Include"":
+	[
+       ""models/vehicles/airplane_small_01/airplane_small_01.vmdl""
     ]
   }
 }";
@@ -217,30 +221,39 @@ public class Helper
     public class Settings
     {
         public string? MapName { get; set; }
-        public List<string>? Include_These_Only { get; set; }
-        public List<string>? Include_All_Exclude_These { get; set; }
+        public List<string>? Workshop_These_Only { get; set; }
+        public List<string>? Workshop_All_Exclude_These { get; set; }
+        public List<string>? Custom_Include { get; set; }
     }
 
     public static Settings? GetSettings(string currentMap)
     {
-        var JsonData = MainPlugin.Instance.g_Main.JsonData;
-        if (JsonData == null || string.IsNullOrEmpty(currentMap)) return null;
+        var jsonData = MainPlugin.Instance.g_Main.JsonData;
+        if (jsonData == null) return null;
 
-        JToken? mapSection = JsonData[currentMap];
-
-        if (mapSection == null)
+        var keys = jsonData.Properties().Select(p => p.Name).ToList();
+        string? matchedKey = currentMap.GetBestMapMatch(keys);
+        
+        if (matchedKey == null)
         {
-            mapSection = JsonData["*"];
-            currentMap = "*";
+            if (keys.Contains("*"))
+            {
+                matchedKey = "*";
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        if (mapSection == null) return null;
+        JToken mapSection = jsonData[matchedKey]!;
 
         return new Settings
         {
-            MapName = currentMap ?? "",
-            Include_These_Only = mapSection["Include_These_Only"]?.ToObject<List<string>>() ?? null,
-            Include_All_Exclude_These = mapSection["Include_All_Exclude_These"]?.ToObject<List<string>>() ?? null
+            MapName = matchedKey,
+            Workshop_These_Only = mapSection["Workshop_These_Only"]?.ToObject<List<string>>(),
+            Workshop_All_Exclude_These = mapSection["Workshop_All_Exclude_These"]?.ToObject<List<string>>(),
+            Custom_Include = mapSection["Custom_Include"]?.ToObject<List<string>>()
         };
     }
 
