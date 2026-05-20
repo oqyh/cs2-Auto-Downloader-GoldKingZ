@@ -14,7 +14,7 @@ namespace Auto_Downloader_GoldKingZ;
 public class MainPlugin : BasePlugin
 {
     public override string ModuleName => "Automatically Download/Precaches Addons Depend Map Config + Update Manually";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "1.0.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static MainPlugin Instance { get; set; } = new();
@@ -27,11 +27,7 @@ public class MainPlugin : BasePlugin
         Helper.RemoveRegisterCommandsAndHooks();
         Helper.ClearVariables();
 
-        bool success = Helper.LoadJSON("config/precache_config.json", out JObject? loadedData);
-        if (success)
-        {
-            g_Main.JsonData = loadedData;
-        }
+        Helper.RemoveLegacyPrecacheConfig();
 
         Helper.RegisterCommandsAndHooks();
        
@@ -41,11 +37,7 @@ public class MainPlugin : BasePlugin
             Helper.RemoveRegisterCommandsAndHooks();
             Helper.ClearVariables();
 
-            bool success2 = Helper.LoadJSON("config/precache_config.json", out JObject? loadedData2);
-            if (success2)
-            {
-                g_Main.JsonData = loadedData2;
-            }
+            Helper.RemoveLegacyPrecacheConfig();
             
             Helper.RegisterCommandsAndHooks();
         }
@@ -169,38 +161,44 @@ public class MainPlugin : BasePlugin
             var serverWorkshopIds = AddonManagerConfig.Get_mm_extra_addons();
             var clientWorkshopIds = AddonManagerConfig.Get_mm_client_extra_addons();
             var combinedWorkshopIds = serverWorkshopIds.Concat(clientWorkshopIds).Distinct().ToList();
-
-            var settings = Helper.GetSettings(Server.MapName);
-            if (settings == null) return;
             
+            var settings = Helper.GetSettings(Server.MapName);
+            if (settings == null)
+            {
+                Helper.DebugMessage($"===== [WARNING] No Precache Rule Matched For Map [{Server.MapName}] — Skipping Precaching =====", true);
+                return;
+            }
+
             var getmapname = settings.MapName?.Trim();
             if (!string.IsNullOrEmpty(getmapname))
             {
                 var Workshop_These_Only = settings.Workshop_These_Only;
                 var Workshop_All_Exclude_These = settings.Workshop_All_Exclude_These;
                 var Custom_Include = settings.Custom_Include;
-                
+
+                int precachedCount = 0;
                 bool message_onetime = false;
+
                 foreach (var getworkshopIds in combinedWorkshopIds)
                 {
                     if (string.IsNullOrEmpty(VpkParser.FindVpkFile(getworkshopIds))) continue;
 
                     var eventsForId = VpkParser.GetEventsFromVpk(getworkshopIds);
-                    if(eventsForId == null)continue;
+                    if (eventsForId == null) continue;
 
                     var sortedEvents = eventsForId
-                    .Where(evt => !string.IsNullOrEmpty(evt))
-                    .OrderBy(evt => 
-                    {
-                        if (Workshop_These_Only != null)
-                            return Workshop_These_Only.Any(f => evt.StartsWith(f));
-                        
-                        if (Workshop_All_Exclude_These != null)
-                            return !Workshop_All_Exclude_These.Any(f => evt.StartsWith(f));
-                        
-                        return true;
-                    })
-                    .ToList();
+                        .Where(evt => !string.IsNullOrEmpty(evt))
+                        .OrderBy(evt =>
+                        {
+                            if (Workshop_These_Only != null)
+                                return Workshop_These_Only.Any(f => evt.StartsWith(f));
+
+                            if (Workshop_All_Exclude_These != null)
+                                return !Workshop_All_Exclude_These.Any(f => evt.StartsWith(f));
+
+                            return true;
+                        })
+                        .ToList();
 
                     bool message_onetime_2 = false;
                     foreach (var evt in sortedEvents)
@@ -217,12 +215,13 @@ public class MainPlugin : BasePlugin
                             Helper.DebugMessage($"--- [Workshop ID: {getworkshopIds}] ---");
                             message_onetime_2 = true;
                         }
-                        
+
                         if (Workshop_These_Only != null)
                         {
                             if (Workshop_These_Only.Any(f => evt.StartsWith(f)))
                             {
                                 manifest.AddResource(evt);
+                                precachedCount++;
                                 Helper.DebugMessage($"[✓] {evt}");
                             }
                             else
@@ -235,6 +234,7 @@ public class MainPlugin : BasePlugin
                             if (!Workshop_All_Exclude_These.Any(f => evt.StartsWith(f)))
                             {
                                 manifest.AddResource(evt);
+                                precachedCount++;
                                 Helper.DebugMessage($"[✓] {evt}");
                             }
                             else
@@ -245,6 +245,7 @@ public class MainPlugin : BasePlugin
                         else
                         {
                             manifest.AddResource(evt);
+                            precachedCount++;
                             Helper.DebugMessage($"[✓] {evt}");
                         }
                     }
@@ -258,15 +259,26 @@ public class MainPlugin : BasePlugin
                         if (!string.IsNullOrWhiteSpace(directEntry))
                         {
                             manifest.AddResource(directEntry);
+                            precachedCount++;
                             Helper.DebugMessage($"[✓] {directEntry}");
                         }
                     }
+                }
+
+                if (precachedCount == 0)
+                {
+                    Helper.DebugMessage($"===== [WARNING] No Precache Has Been Made For Map [{Server.MapName}] — Skipping =====", true);
+                    Helper.DebugMessage($"[Config Match]: {getmapname} (resulted in 0 resources precached)", true);
+                }
+                else
+                {
+                    Helper.DebugMessage($"===== Precache Complete [Map {Server.MapName}] — {precachedCount} Resource(s) Added =====", true);
                 }
             }
         }
         catch (Exception ex)
         {
-            Helper.DebugMessage($"OnServerPrecacheResources Error: {ex.Message}");
+            Helper.DebugMessage($"OnServerPrecacheResources Error: {ex.Message}", true);
         }
     }
     

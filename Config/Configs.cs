@@ -14,6 +14,14 @@ namespace Auto_Downloader_GoldKingZ.Config
     [AttributeUsage(AttributeTargets.Property)] public class RangeAttribute : Attribute { public double Min, Max, Default; public string? Message; public RangeAttribute(double min, double max, double def, string? msg = null) { Min = min; Max = max; Default = def; Message = msg; } }
 
 
+    public class Precache_Rule
+    {
+        public string MapName { get; set; } = "";
+        public List<string> Workshop_These_Only { get; set; } = new List<string>();
+        public List<string> Workshop_All_Exclude_These { get; set; } = new List<string>();
+        public List<string> Custom_Include { get; set; } = new List<string>();
+    }
+
     public class Config
     {
         [BreakLine("----------------------------[ ↓ Plugin Info ↓ ]----------------------------{nextline}")]
@@ -28,10 +36,29 @@ namespace Auto_Downloader_GoldKingZ.Config
         [Comment("false = No")]
         public bool ForceDownloadMissing { get; set; } = true;
 
+        [Comment("Define Per-Map Precache Rules (Empty = Precache All By Default)")]
+        [Comment("MapName: The Map This Rule Applies To")]
+        [Comment("  - Exact Match: \"de_dust2\" Applies Only To de_dust2")]
+        [Comment("  - Prefix Match: \"de_\" Applies To All Maps Starting With \"de_\" (de_dust2, de_mirage, etc.)")]
+        [Comment("  - \"ANY\" Applies As A Fallback When No Exact Or Prefix Match Is Found")]
+        [Comment("Workshop_These_Only         -> Precache ONLY Listed Files From Workshop VPKs")]
+        [Comment("Workshop_All_Exclude_These  -> Precache ALL From Workshop EXCEPT Listed")]
+        [Comment("Custom_Include              -> Custom Precache From CS2 / Workshop / Any")]
+        public List<Precache_Rule> Precache_Filter { get; set; } = new List<Precache_Rule>
+        {
+            new Precache_Rule
+            {
+                MapName = "",
+                Workshop_These_Only = new List<string> {},
+                Workshop_All_Exclude_These = new List<string> {},
+                Custom_Include = new List<string> {}
+            }
+        };
+
         [Comment("Enable Debug Plugin In Server Console (Helps You To Debug Issues You Facing)?")]
         [Comment("true = Yes")]
         [Comment("false = No")]
-        public bool EnableDebug { get; set; } = true;
+        public bool EnableDebug { get; set; } = false;
     }
 
     public static class Configs
@@ -54,7 +81,6 @@ namespace Auto_Downloader_GoldKingZ.Config
             }
 
             filePath = Path.Combine(configDirectory, "config.json");
-            Helper.CreateResource(Path.Combine(configDirectory, "precache_config.json"));
 
             if (!File.Exists(filePath)) { Save(); return; }
 
