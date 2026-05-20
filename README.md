@@ -1,8 +1,18 @@
-## .:[ Join Our Discord For Support ]:.
+---
+<h2 align="center">.:[ Community | Support ]:.</h2>
+<p align="center">
+  <a href="https://discord.com/invite/U7AuQhu">
+    <img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
+  </a>
+  <a href="https://ko-fi.com/goldkingz">
+    <img src="https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" />
+  </a>
+</p>
 
-<a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
+---
 
-# [CS2] Auto-Downloader-GoldKingZ (1.0.1)
+
+# [CS2] Auto-Downloader-GoldKingZ (1.0.2)
 
 Automatically Download/Precaches Addons Depend Map Config + Update Manually For MultiAddonManager
 
@@ -42,61 +52,99 @@ Automatically Download/Precaches Addons Depend Map Config + Update Manually For 
 
 ---
 
-## ⚙️ Configuration
-
-> [!IMPORTANT]
-> **Main Configuration**  
-> `../Auto-Downloader-GoldKingZ/config/config.json`  
-> **Precache Configuration**  
-> `../Auto-Downloader-GoldKingZ/config/precache_config.json`
-
 ## 🛠️ `config/config.json`
 
 <details open>
 <summary><b>Main Config</b> (Click to expand 🔽)</summary>
-  
-| Property                            | Description                               | Values                                                                                                                  | Required |
-| ----------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------- |
-| `ForceDownloadMissing`             | Force Download Missing Workshops If Not Found In The Server | `true`/`false`                                                                                                          | -        |
-| `EnableDebug`             | Enable Debug Mode | `true`/`false`                                                                                                          | -        |
 
+| Property | Description | Values | Required |
+|----------|-------------|--------|----------|
+| `ForceDownloadMissing` | Force Download Missing Workshops If Not Found In The Server | `true`/`false` | - |
+| `Precache_Filter` | Per-Map Precache Rules (See Precache Filter Examples Below) | List of rules<br>`[]` = Precache All | - |
+| `EnableDebug` | Enable Debug Mode | `true`/`false` | - |
 
 </details>
 
-## 🛠️ `config/precache_config.json`
+<details>
+<summary><b>Precache Filter</b> (Click to expand 🔽)</summary>
 
-<details open>
-<summary><b>Precache Config</b> (Click to expand 🔽)</summary>
+### Precache Logic
 
-## Precache Logic
 | Strategy | Description |
-|-------------|-------------|
+|----------|-------------|
 | `Workshop_These_Only` | Precache **ONLY** listed folders/files found within Workshop VPKs. |
 | `Workshop_All_Exclude_These` | Precache **ALL** from Workshop VPKs **EXCEPT** the listed items. |
-| `Custom_Include` | **Direct Precache**: Use this for CS2 / Workshop / Any |
-| *Empty / Missing* | If no Workshop rules are set, the system will precache **Everything** in Workshop VPKs. |
+| `Custom_Include` | **Direct Precache**: Use this for CS2 / Workshop / Any. |
+| *Empty `Precache_Filter`* | If the filter list is empty, the system will precache **Everything** in Workshop VPKs by default. |
 
-## Map Matching & Priority
+### Map Matching & Priority
+
 The system searches for a configuration match in this order:
-1. **Exact Match**: Full name (e.g., `de_dust2`).
-2. **Prefix Match**: Matches maps starting with the key (e.g., `de_`). **MUST end with `_`**.
-3. **Global Match**: Uses `*` if no specific or prefix match is found.
+1. **Exact Match**: Full map name (e.g., `de_dust2`).
+2. **Prefix Match**: Matches maps starting with the key (e.g., `de_`). **MUST end with `_`**. Longest prefix wins.
+3. **Fallback Match**: Uses `ANY` (or an empty `MapName`) if no exact or prefix match is found.
 
-## Map Configurations
+> [!NOTE]
+> If `Precache_Filter` contains rules but none match the current map (no exact, prefix, or `ANY` fallback), the plugin will log a warning and skip precaching for that map.
+
+### Example Configuration
+
+```json
+"Precache_Filter":
+[
+  {
+    "MapName": "ANY",
+    "Custom_Include":
+    [
+      "sounds/player/taunt_clap_01.vsnd"
+    ]
+  },
+  {
+    "MapName": "de_",
+    "Custom_Include":
+    [
+      "soundevents2/game_sounds_ui.vsndevts"
+    ]
+  },
+  {
+    "MapName": "de_dust2",
+    "Workshop_These_Only":
+    [
+      "models/dev/",
+      "materials/dev/"
+    ]
+  },
+  {
+    "MapName": "cs_office",
+    "Workshop_All_Exclude_These":
+    [
+      "scripts/weapons.vdata"
+    ]
+  }
+]
+```
+
+### Map Configurations
+
 | Map Name | Strategy Used | Paths / Files |
-|-------------|-------------|-------------|
-| `*` | `Custom_Include` | `sounds/player/taunt_clap_01.vsnd` |
+|----------|---------------|---------------|
+| `ANY` | `Custom_Include` | `sounds/player/taunt_clap_01.vsnd` |
 | `de_` | `Custom_Include` | `soundevents2/game_sounds_ui.vsndevts` |
 | `de_dust2` | `Workshop_These_Only` | `models/dev/`, `materials/dev/` |
 | `cs_office` | `Workshop_All_Exclude_These` | `scripts/weapons.vdata` |
 
 </details>
 
-
 ## 📜 Changelog
 
 <details>
 <summary><b>📋 View Version History</b> (Click to expand 🔽)</summary>
+
+### [1.0.2]
+- Migrated `Precache_Filter` from `precache_config.json` into the main `config.json`
+- Auto-removes legacy `precache_config.json` on plugin load if found
+- Making EnableDebug False By Default
+- Fix Console Color On Windows And Lunix
 
 ### [1.0.1]
 - Added Prefix `de_` `cs_`  
